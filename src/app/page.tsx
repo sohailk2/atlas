@@ -4,8 +4,6 @@ import Atlas from "./components/atlas";
 
 export default function Home() {
   return (
-    <main className={styles.main}>
-      <Atlas/>
-    </main>
+    "Hello"
   );
 }
