@@ -6,6 +6,9 @@ import ActiveGame from "@/app/components/activeGame";
 
 const lobbies: LobbyHolder = {};
 
+// given a socketId, tell it what lobby it belongs to
+const lobbyCode_Lookup: {[socketId: string]: string} = {}
+
 export const AtlasAgent = (io: Server) => {
   io.of("/atlas").on("connection", (socket) => {
     console.log(`a user connected to ${socket.nsp.name}`);
@@ -34,14 +37,14 @@ export const AtlasAgent = (io: Server) => {
         return
       }
 
-      switch (joinLobby(lobby, playerName)) {
+      switch (joinLobby(lobby, playerName, socket.id)) {
         case JoinLobbyStatus.InvalidName: {
           socket.emit("invalidName")
           break
         } case JoinLobbyStatus.Success: {
           // Tell current user they've joined
           socket.emit("joinSuccess");
-
+          lobbyCode_Lookup[socket.id] = lobbyCode
           //Update All Users with new Lobby State
           sendLobbyState(io, lobby);
         }
@@ -68,8 +71,26 @@ export const AtlasAgent = (io: Server) => {
       // maybe a loop that checks last updated timestamp of lobby... and its been more than x seconds, proceed
     })
 
-    socket.on("submitGuess", (lobbyCode, guess) => {
+    // see now the client manages which lobby its connected to
+    // should instead be the backend have a list of lobbyCode lookup by socketId
+    // can probably do that tbh
+
+    socket.on("submitGuess", (guess) => {
+
+      console.log("GUESSED:", guess)
+
+      // i mean this probably shouldn't ever trigger? 
+      // oh but you can't think like, what if people are out of sync
+      const lobbyCode = lobbyCode_Lookup[socket.id]
+      if (!lobbyCode) {
+        return
+      }
+
       const lobby = getLobby(lobbyCode, lobbies)
+      if (lobby.playerList.activePlayer?.socketId != socket.id) {
+        sendLobbyState(io, lobby)
+        return
+      } 
 
       // If game not running, this shouldn't be executed
       if (lobby.gameState != GameState.Active) {
@@ -77,6 +98,7 @@ export const AtlasAgent = (io: Server) => {
       }
 
       if (validateGuess(io, lobby, guess)) {
+        lobby.guesses.push(guess)
         nextPlayer(io, lobby)
       }
 

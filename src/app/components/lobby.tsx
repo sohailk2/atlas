@@ -15,6 +15,7 @@ export default function Lobby(props: Props) {
     useEffect(() => {
         // socket listeners here
     }, [])
+    
     const StartGame = () => {
         if (joined) {
             return <button onClick={() => {socket.emit("startGame", lobbyState.lobbyCode)}}>Start Game</button>

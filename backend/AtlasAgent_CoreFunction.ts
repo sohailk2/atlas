@@ -4,10 +4,22 @@ import { GameState, LobbyHolder, LobbyState, LobbyStateFanOutEvent } from "./typ
 // Game Functions
 export const startGame = (io: Server, lobby: LobbyState) => {
 
+    // set up first player
+    lobby.playerList.activePlayer = lobby.playerList.head
+
+    lobby.gameState = GameState.Active
+
+    sendLobbyState(io, lobby)
 }
 
 export const nextPlayer = (io: Server, lobby: LobbyState) => {
-    // maybe i make a linked list of active players?
+    const activePlayer = lobby.playerList.activePlayer
+    const nextPlayer = activePlayer?.nextPlayer || lobby.playerList.head
+    lobby.playerList.activePlayer = nextPlayer
+
+    sendLobbyState(io, lobby)
+
+    //think about edge cases later, like what if no active player, only one player so when player loses after time expires they get booted
 }
 
 export const validateGuess = (io: Server, lobby: LobbyState, guess: string): boolean => {

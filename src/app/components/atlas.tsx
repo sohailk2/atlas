@@ -15,6 +15,8 @@ export default function Atlas(props: Props) {
     // const activeUsers = ["person1"]
     // const [guess, setGuess] = useState("")
     // const [warning, setWarning] = useState("")
+    const [playerName, setPlayerName] = useState<string>("")
+
 
     const [isConnected, setIsConnected] = useState(false);
     const [transport, setTransport] = useState("N/A");
@@ -25,7 +27,8 @@ export default function Atlas(props: Props) {
         players: [], 
         lobbyCode: lobbyCode,
         gameState: GameState.Loading,
-        activePlayer: ""
+        activePlayer: "",
+        guesses: []
     })
 
     const [joined, setJoined] = useState<boolean>(false)
@@ -82,7 +85,8 @@ export default function Atlas(props: Props) {
         };
     }, []);
 
-    const connectToLobby = (lobbyCode: String, playerName: String) => {
+    const connectToLobby = (lobbyCode: String, playerName: string) => {
+        setPlayerName(playerName)
         socket.emit("joinLobby", lobbyCode, playerName)
     }
 
@@ -99,23 +103,28 @@ export default function Atlas(props: Props) {
     // Functional Component to Join Game
     const JoinGame = () => {
 
-        const [playerName, setPlayerName] = useState<string>("")
-        const handleKeyPress = (event) => {
+        const [localPlayerName, setLocalPlayerName] = useState<string>("")
+
+        const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
             if (event.key === 'Enter') {
-                connectToLobby(lobbyCode, playerName)
+                connectToLobby(lobbyCode, localPlayerName)
             }
         }
+
+        useEffect(() => {
+            inputPlayerNameRef.current?.focus()
+        }, [])
 
         // do some switch statements here, if game active then say spectating or something?
         if (!joined && lobbyState.gameState == GameState.Lobby) {
             return (
                 <>
-                    <p> enter player name: <button onClick={() => { connectToLobby(lobbyCode, playerName) }}>Connect to lobby</button> </p>
-                    <span onClick={() => inputPlayerNameRef.current?.focus()}>{">"}</span>
+                    <p> enter player name: <button onClick={() => { connectToLobby(lobbyCode, localPlayerName) }}>Connect to lobby</button> </p>
+                    <span onClick={() => inputPlayerNameRef.current?.focus()}>{"> "}</span>
                     <input
-                        style={{ 'padding': '3% 0% 3% 0%', 'border': 'none', 'background': 'transparent' }}
-                        value={playerName}
-                        onChange={(event) => setPlayerName(event.target.value)}
+                        style={{ 'padding': '3% 0% 3% 0%', 'border': 'none', 'background': 'transparent', 'outline': 'none' }}
+                        value={localPlayerName}
+                        onChange={(event) => setLocalPlayerName(event.target.value)}
                         onKeyUp={event => { handleKeyPress(event) }}
                         ref={inputPlayerNameRef}
                     />
@@ -136,7 +145,7 @@ export default function Atlas(props: Props) {
             case GameState.Lobby:
                 return (<Lobby lobbyState={lobbyState} joined={joined} socket={socket} />)
             case GameState.Active:
-                return (<ActiveGame/>)
+                return (<ActiveGame lobbyState={lobbyState} socket={socket} playerName={playerName}/>)
         }
     }
 

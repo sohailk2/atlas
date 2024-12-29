@@ -1,4 +1,5 @@
 
+import { socket } from "@/socket";
 import { LobbyState, LobbyHolder, GameState, PlayerList } from "./types";
 
 // Return type for Joining Lobby
@@ -29,15 +30,15 @@ export const getLobby = (lobbyCode: string, lobbies: LobbyHolder): LobbyState =>
     return lobby;
 }
 
-export const joinLobby = (lobby: LobbyState, playerName: string): JoinLobbyStatus => {
+export const joinLobby = (lobby: LobbyState, playerName: string, socketId: string): JoinLobbyStatus => {
     if (lobby.playerList.includes(playerName)) {
         return JoinLobbyStatus.NameAlreadyExists
     }
 
-    lobby.playerList.addPlayer(playerName)
+    addPlayer(lobby, playerName, socketId)
     return JoinLobbyStatus.Success
 }
 
-export const addPlayer = (lobby: LobbyState, playerName: string) => {
-    lobby.playerList.addPlayer(playerName)
+export const addPlayer = (lobby: LobbyState, playerName: string, socketId: string) => {
+    lobby.playerList.addPlayer(playerName, socketId)
 }

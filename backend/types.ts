@@ -6,10 +6,14 @@ class Player {
     nextPlayer: Player | null
     name: string
 
-    constructor(prev: Player | null, next: Player | null, playerName: string) {
+    // each player can also have their associated socket?
+    socketId: string
+
+    constructor(prev: Player | null, next: Player | null, playerName: string, socketId: string) {
         this.prevPlayer = prev
         this.nextPlayer = next
         this.name = playerName
+        this.socketId = socketId
     }
 }
 
@@ -40,8 +44,8 @@ export class PlayerList {
         return null
     }
 
-    public addPlayer = (playerName: string): void => {
-        const curr = new Player(this.tail, null, playerName)
+    public addPlayer = (playerName: string, socketId: string): void => {
+        const curr = new Player(this.tail, null, playerName, socketId)
         if (this.tail) {
             this.tail.nextPlayer = curr
         } else {
